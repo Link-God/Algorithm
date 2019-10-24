@@ -10,7 +10,7 @@ class StrType(Enum):
     SET = 4
 
 
-M = 1 << 31 - 1
+M = (1 << 31) - 1
 
 
 def eratosthenes(n):
@@ -28,7 +28,7 @@ def get_prime_by_index(index):
 
 
 def family_of_hash_functions(x, index, m):
-    return ((index + 1) * x + get_prime_by_index(index + 1) % M) % m
+    return (((index + 1) * x + get_prime_by_index(index + 1)) % M) % m
 
 
 class BitArray:
@@ -37,10 +37,10 @@ class BitArray:
         self.size = size
 
     def add(self, key):
-        self.bit_array |= 1 << key
+        self.bit_array |= (1 << key)
 
     def find(self, key):
-        if self.bit_array & 1 << key == 0:
+        if (self.bit_array & (1 << key)) == 0:
             return False
         return True
 
