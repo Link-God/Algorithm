@@ -50,8 +50,8 @@ class BitArray:
 
 class BlumFilter:
     def __init__(self, n, P):
-        self.size_of_array = -round(n * log2(P) / log(2))
-        self.quantity_of_hash_func = -round(log2(P))
+        self.size_of_array = round(-n * log2(P) / log(2))
+        self.quantity_of_hash_func = round(-log2(P))
         self.bit_array = BitArray(self.size_of_array)
         self.hash_func = family_of_hash_functions
 
