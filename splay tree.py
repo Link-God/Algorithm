@@ -13,6 +13,25 @@ class BST:
     def __init__(self):
         self.root = Node(None, None)
 
+    def _add_note(self, key, value):
+        node = Node(key, value)
+        parent = None
+        temp = self.root
+        while temp and temp.key:
+            parent = temp
+            if key < temp.key:
+                temp = temp.left_child
+            else:
+                temp = temp.right_child
+        node.parent = parent
+        if parent is None:
+            self.root = node
+        elif key < parent.key:
+            parent.left_child = node
+        else:
+            parent.right_child = node
+        return node
+
     def add(self, key, value):
         node = Node(key, value)
         parent = None
@@ -41,13 +60,20 @@ class BST:
                     temp = temp.left_child
                 else:
                     temp = temp.right_child
+        return temp
 
     def search(self, key):
         node = self._search_node(key)
-        if node is not None:
+        if node.key == key:
             return True
         else:
             return False
+
+    def _set_node(self, key, value):
+        node = self._search_node(key)
+        if node.key == key:
+            node.value = value
+            return node
 
     def set(self, key, value):
         """
@@ -80,7 +106,7 @@ class BST:
         node = self._max_node()
         return node.key, node.value
 
-    def _previous(self, node: Node):
+    def _previous_node(self, node: Node):
         if node.left_child is not None:
             return self._max_node(node.left_child)
         else:
@@ -90,7 +116,7 @@ class BST:
                 temp = temp.parent
             return temp
 
-    def _next(self, node: Node):
+    def _next_node(self, node: Node):
         if node.right_child is not None:
             return self._max_node(node.right_child)
         else:
@@ -122,7 +148,7 @@ class BST:
                     parent.right_child = node.left_child
                 node.left_child.parent = parent
         else:
-            p_node = self._previous(node)
+            p_node = self._previous_node(node)
             node.key, node.value = p_node.key, p_node.value
             if p_node.parent.left_child == p_node:
                 p_node.parent.left_child = p_node.right_child
@@ -138,6 +164,132 @@ class SplayTree(BST):
     def __init__(self):
         super().__init__()
 
-    def splay(self):
-        pass
+    def _rotate_right(self, node: Node):
+        left_ch = node.left_child
+        node.left_child = left_ch.right_child
+        if left_ch.right_child is not None:
+            left_ch.right_child.parent = node
 
+        left_ch.parent = node.parent
+        if node.parent is None:
+            self.root = left_ch
+        elif node == node.parent.right_child:
+            node.parent.right_child = left_ch
+        else:
+            node.parent.left_child = left_ch
+
+        left_ch.right_child = node
+        node.parent = left_ch
+
+    def _rotate_left(self, node: Node):
+        right_ch = node.right_child
+        node.right_child = right_ch.left_child
+        if right_ch.left_child is not None:
+            right_ch.left_child.parent = node
+
+        right_ch.parent = node.parent
+        if node.parent is None:
+            self.root = right_ch
+        elif node == node.parent.left_child:
+            node.parent.left_child = right_ch
+        else:
+            node.parent.right_child = right_ch
+        right_ch.left_child = node
+        node.parent = right_ch
+
+    def _zig(self, node: Node):
+        self._rotate_right(node.parent)
+
+    def _zag(self, node: Node):
+        self._rotate_left(node.parent)
+
+    def _zig_zig(self, node: Node):
+        self._rotate_right(node.parent.parent)
+        self._rotate_right(node.parent)
+
+    def _zag_zag(self, node: Node):
+        self._rotate_left(node.parent.parent)
+        self._rotate_left(node.parent)
+
+    def _zig_zag(self, node: Node):
+        self._rotate_left(node.parent)
+        self._rotate_right(node.parent)
+
+    def _zag_zig(self, node: Node):
+        self._rotate_right(node.parent)
+        self._rotate_left(node.parent)
+
+    def _splay(self, node: Node):
+        while node.parent is not None:
+            if node.parent.parent is None:
+                if node == node.parent.left_child:
+                    self._zig(node)
+                else:
+                    self._zag(node)
+            elif node == node.parent.left_child and node.parent == node.parent.parent.left_child:
+                self._zig_zig(node)
+
+            elif node == node.parent.right_child and node.parent == node.parent.parent.right_child:
+                self._zag_zag(node)
+            elif node == node.parent.right_child and node.parent == node.parent.parent.left_child:
+                self._zig_zag(node)
+            elif node == node.parent.left_child and node.parent == node.parent.parent.right_child:
+                self._zag_zig(node)
+
+    def add(self, key, value):
+        node = self._add_note(key, value)
+        self._splay(node)
+
+    def search(self, key):
+        node = self._search_node(key)
+        if node.key == key:
+            self._splay(node)
+            return node.value
+        else:
+            self._splay(node)
+            return None
+
+    def set(self, key, value):
+        node = self._set_node(key, value)
+        if node is not None:
+            self._splay(node)
+        else:
+            raise KeyError
+
+    def min(self):
+        node = self._min_node()
+        self._splay(node)
+        return node.key, node.value
+
+    def delete(self, key):
+        node = self._search_node(key)
+        if node.key == key:
+            self._splay(node)
+            if self.root.left_child is not None:
+                self.root.left_child.parent = None
+                temp = self.root.left_child
+                while temp and temp.right_child:
+                    temp = temp.right_child
+                self._splay(temp)
+                self.root.left_child.right_child = self.root.right_child
+                self.root.right_child.parent = self.root.left_child
+                self.root = self.root.left_child
+            else:
+                self.root = self.root.right_child
+        else:
+            raise KeyError
+
+    def max(self):
+        node = self._max_node()
+        self._splay(node)
+        return node.key, node.value
+
+
+T = SplayTree()
+T.add(13, 2)
+T.add(2, 3)
+T.add(4, 2)
+T.add(34, 5)
+T.add(5, 4)
+T.add(7, 4)
+T.delete(13)
