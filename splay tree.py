@@ -68,7 +68,6 @@ class BST:
 
     def _max_node(self, root=None):
         temp = self.root if not root else root
-        temp = self.root
         while temp.right_child:
             temp = temp.right_child
         return temp
