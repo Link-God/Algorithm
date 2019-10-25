@@ -60,13 +60,14 @@ class BST:
         else:
             return False
 
-    def _min_node(self):
-        temp = self.root
+    def _min_node(self, root=None):
+        temp = self.root if not root else root
         while temp.left_child:
             temp = temp.left_child
         return temp
 
-    def _max_node(self):
+    def _max_node(self, root=None):
+        temp = self.root if not root else root
         temp = self.root
         while temp.right_child:
             temp = temp.right_child
@@ -80,8 +81,58 @@ class BST:
         node = self._max_node()
         return node.key, node.value
 
+    def _previous(self, node: Node):
+        if node.left_child is not None:
+            return self._max_node(node.left_child)
+        else:
+            temp = node.parent
+            while temp and node == temp.left_child:
+                node = temp
+                temp = temp.parent
+            return temp
+
+    def _next(self, node: Node):
+        if node.right_child is not None:
+            return self._max_node(node.right_child)
+        else:
+            temp = node.parent
+            while temp and node == temp.right_child:
+                node = temp
+                temp = temp.parent
+            return temp
+
     def delete(self, key):
-        pass
+        node = self._search_node(key)
+        parent = node.parent
+        if node.right_child is None and node.right_child is None:
+            if parent.left_child == node:
+                parent.left_child = None
+            else:
+                parent.right_child = None
+        elif node.right_child is None or node.right_child is None:
+            if node.left_child is None:
+                if parent.left_child == node:
+                    parent.left_child = node.right_child
+                else:
+                    parent.right_child = node.right_child
+                node.right_child.parent = parent
+            else:
+                if parent.left_child == node:
+                    parent.left_child = node.left_child
+                else:
+                    parent.right_child = node.left_child
+                node.left_child.parent = parent
+        else:
+            p_node = self._previous(node)
+            node.key, node.value = p_node.key, p_node.value
+            if p_node.parent.left_child == p_node:
+                p_node.parent.left_child = p_node.right_child
+                if p_node.right_child is not None:
+                    p_node.right_child.parent = p_node.parent
+            else:
+                p_node.parent.right_child = p_node.left_child
+                if p_node.left_child is not None:
+                    p_node.right_child.parent = p_node.parent
 
 
 class SplayTree(BST):
