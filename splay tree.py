@@ -142,35 +142,3 @@ class SplayTree(BST):
     def splay(self):
         pass
 
-    # def print(self):
-    #     pass
-    #
-    # def set(self):
-    #     pass
-    #
-    # def min(self):
-    #     pass
-    #
-    # def max(self):
-    #     pass
-    #
-    # def delete(self):
-    #     pass
-    #
-    # def search(self):
-    #     pass
-
-
-T = BST()
-print(T.max())
-print(T.search(3))
-T.add(3, 15)
-print(T.max())
-print(T)
-T.add(1, 2)
-T.add(4, 16)
-print(T)
-print(T.search(4))
-print(T.search(3))
-print(T.max())
-print(T.min())
