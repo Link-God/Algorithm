@@ -279,16 +279,20 @@ class SplayTree(BST):
         if node.key == key:
             self.size -= 1
             self._splay(node)
-            if self.root.left_child is not None:
+            if self.root.left_child is not None and self.root.right_child is not None:
+                right_sub_tree = self.root.right_child
                 self.root.left_child.parent = None
                 temp = self.root.left_child
                 while temp and temp.right_child:
                     temp = temp.right_child
                 self._splay(temp)
-                self.root.left_child.right_child = self.root.right_child
-                self.root.right_child.parent = self.root.left_child
+                right_sub_tree.parent = self.root
+                self.root.right_child = right_sub_tree
+            elif self.root.left_child is not None:
+                self.root.left_child.parent = None
                 self.root = self.root.left_child
-            else:
+            elif self.root.right_child is not None:
+                self.root.right_child.parent = None
                 self.root = self.root.right_child
         else:
             raise KeyError
@@ -332,6 +336,10 @@ T = SplayTree()
 T.add(13, 2)
 T.add(2, 3)
 T.add(4, 2)
-T.add(5, 2)
+T.add(1, 2)
+T.add(3, 2)
+# T.max()
+print(T.string_representation(), end='')
+T.delete(3)
 print(T.string_representation(), end='')
 print('a')
