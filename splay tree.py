@@ -1,3 +1,14 @@
+from enum import Enum
+from collections import deque
+
+
+class StrType(Enum):
+    ADD = 1
+    SEARCH = 2
+    PRINT = 3
+    SET = 4
+
+
 class Node:
     def __init__(self, key, value, parent=None, left_ch=None, right_ch=None):
         self.key = key
@@ -163,6 +174,7 @@ class BST:
 class SplayTree(BST):
     def __init__(self):
         super().__init__()
+        self.size = 0
 
     def _rotate_right(self, node: Node):
         left_ch = node.left_child
@@ -237,6 +249,7 @@ class SplayTree(BST):
                 self._zag_zig(node)
 
     def add(self, key, value):
+        self.size += 1
         node = self._add_note(key, value)
         self._splay(node)
 
@@ -264,6 +277,7 @@ class SplayTree(BST):
     def delete(self, key):
         node = self._search_node(key)
         if node.key == key:
+            self.size -= 1
             self._splay(node)
             if self.root.left_child is not None:
                 self.root.left_child.parent = None
@@ -284,12 +298,40 @@ class SplayTree(BST):
         self._splay(node)
         return node.key, node.value
 
+    def string_representation(self):
+        string = ''
+
+        def p_node(n: Node):
+            if n == self.root:
+                return f"[{n.key} {n.value}]"
+            else:
+                return f"[{n.key} {n.value} {n.parent.key}]" if n is not None else '_'
+
+        num_of_printed = 0
+        num_of_printed_nodes = 0
+        q = deque()
+        q.append(self.root)
+        while num_of_printed_nodes != self.size:
+            num_of_printed += 1
+            node = q.popleft()
+            string += (p_node(node) + ('\n' if ((num_of_printed + 1) & num_of_printed == 0) else ' '))
+            if node:
+                num_of_printed_nodes += 1
+                q.extend((node.left_child, node.right_child))
+            else:
+                q.extend((None, None))
+
+        remaining_empties = ((1 << (len(bin(num_of_printed)[2:]))) - num_of_printed) - 1
+        if remaining_empties:
+            string += ' '.join('_' for _ in range(remaining_empties)) + '\n'
+
+        return string
+
 
 T = SplayTree()
 T.add(13, 2)
 T.add(2, 3)
 T.add(4, 2)
-T.add(34, 5)
-T.add(5, 4)
-T.add(7, 4)
-T.delete(13)
+T.add(5, 2)
+print(T.string_representation(), end='')
+print('a')
