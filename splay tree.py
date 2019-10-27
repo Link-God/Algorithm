@@ -1,5 +1,6 @@
 from enum import Enum
 from collections import deque
+from sys import stdin
 
 
 class StrType(Enum):
@@ -7,6 +8,9 @@ class StrType(Enum):
     SEARCH = 2
     PRINT = 3
     SET = 4
+    MAX = 5
+    MIN = 6
+    DELETE = 7
 
 
 class Node:
@@ -16,6 +20,14 @@ class Node:
         self.parent = parent
         self.right_child = right_ch
         self.left_child = left_ch
+
+    def __bool__(self):
+        return bool(self.key and self.value)
+
+
+class EmptyTree(Exception):
+    def __init__(self, message):
+        super().__init__(message)
 
 
 class BST:
@@ -39,27 +51,14 @@ class BST:
             self.root = node
         elif key < parent.key:
             parent.left_child = node
-        else:
+        elif key > parent.key:
             parent.right_child = node
+        else:
+            raise KeyError
         return node
 
     def add(self, key, value):
-        node = Node(key, value)
-        parent = None
-        temp = self.root
-        while temp and temp.key:
-            parent = temp
-            if key < temp.key:
-                temp = temp.left_child
-            else:
-                temp = temp.right_child
-        node.parent = parent
-        if parent is None:
-            self.root = node
-        elif key < parent.key:
-            parent.left_child = node
-        else:
-            parent.right_child = node
+        _ = self._add_note(key, value)
 
     def _search_node(self, key):
         temp = self.root
@@ -111,11 +110,17 @@ class BST:
 
     def min(self):
         node = self._min_node()
-        return node.key, node.value
+        if node:
+            return node.key, node.value
+        else:
+            raise EmptyTree
 
     def max(self):
         node = self._max_node()
-        return node.key, node.value
+        if node:
+            return node.key, node.value
+        else:
+            raise EmptyTree
 
     def _previous_node(self, node: Node):
         if node.left_child is not None:
@@ -139,6 +144,8 @@ class BST:
 
     def delete(self, key):
         node = self._search_node(key)
+        if not node:
+            raise EmptyTree
         parent = node.parent
         if node.right_child is None and node.right_child is None:
             if parent.left_child == node:
@@ -294,6 +301,8 @@ class SplayTree(BST):
             elif self.root.right_child is not None:
                 self.root.right_child.parent = None
                 self.root = self.root.right_child
+            else:
+                self.root = Node(None, None)
         else:
             raise KeyError
 
@@ -327,19 +336,125 @@ class SplayTree(BST):
 
         remaining_empties = ((1 << (len(bin(num_of_printed)[2:]))) - num_of_printed) - 1
         if remaining_empties:
-            string += ' '.join('_' for _ in range(remaining_empties)) + '\n'
+            string += ' '.join('_' for _ in range(remaining_empties))
 
-        return string
+        return string.strip()
 
 
-T = SplayTree()
-T.add(13, 2)
-T.add(2, 3)
-T.add(4, 2)
-T.add(1, 2)
-T.add(3, 2)
-# T.max()
-print(T.string_representation(), end='')
-T.delete(3)
-print(T.string_representation(), end='')
-print('a')
+class Handler:
+    def __init__(self, handler_object=stdin):
+        self.handler_object = handler_object
+
+    def parse(self):
+        S_tree = SplayTree()
+        final_line = ''
+        for line in self.handler_object:
+            if line == '\n':
+                continue
+            if 'set' in line:
+                if self.have_error(line, StrType.SET):
+                    final_line += 'error\n'
+                else:
+                    try:
+                        temp_list = line.replace('set', '').strip().split(' ')
+                        key, value = int(temp_list[0]), str(temp_list[1])
+                        S_tree.set(key, value)
+                    except KeyError:
+                        final_line += 'error\n'
+
+            elif 'search' in line:
+                if self.have_error(line, StrType.SEARCH):
+                    final_line += 'error\n'
+                else:
+                    final_line += '1\n' if S_tree.search(int(line[len('search'):].strip())) else '0\n'
+
+            elif 'add' in line:
+                if self.have_error(line, StrType.ADD):
+                    final_line += 'error\n'
+                else:
+                    try:
+                        temp_list = line.replace('add', '').strip().split(' ')
+                        key, value = int(temp_list[0]), str(temp_list[1])
+                        S_tree.add(key, value)
+                    except KeyError:
+                        final_line += 'error\n'
+
+            elif 'print' in line:
+                if self.have_error(line, StrType.PRINT):
+                    final_line += 'error\n'
+                else:
+                    final_line += S_tree.string_representation() + '\n'
+
+            elif 'max' in line:
+                if self.have_error(line, StrType.MAX):
+                    final_line += 'error\n'
+                else:
+                    try:
+                        final_line += "{} {}".format(*S_tree.max()) + '\n'
+                    except EmptyTree:
+                        final_line += 'error\n'
+
+            elif 'min' in line:
+                if self.have_error(line, StrType.MIN):
+                    final_line += 'error\n'
+                else:
+                    try:
+                        final_line += "{} {}".format(*S_tree.min()) + '\n'
+                    except EmptyTree:
+                        final_line += 'error\n'
+
+            elif 'delete' in line:
+                if self.have_error(line, StrType.DELETE):
+                    final_line += 'error\n'
+                else:
+                    try:
+                        S_tree.delete(int(line[len('delete'):].strip()))
+                    except KeyError:
+                        final_line += 'error\n'
+
+            else:
+                final_line += 'error\n'
+
+        print(final_line, end='')
+
+    @staticmethod
+    def have_error(check_line: str, str_type: StrType):
+        if str_type == StrType.SEARCH:
+            if len(check_line.replace('search', '').strip().split(' ')) != 1:
+                return True
+            else:
+                return False
+        elif str_type == StrType.ADD:
+            if len(check_line.replace('add', '').strip().split(' ')) != 2:
+                return True
+            else:
+                return False
+        elif str_type == StrType.PRINT:
+            if check_line.replace('print', '') != '\n':
+                return True
+            else:
+                return False
+        elif str_type == StrType.SET:
+            if len(check_line.replace('set', '').strip().split(' ')) != 2:
+                return True
+            else:
+                return False
+        elif str_type == StrType.MAX:
+            if check_line.replace('max', '') != '\n':
+                return True
+            else:
+                return False
+        elif str_type == StrType.MIN:
+            if check_line.replace('min', '') != '\n':
+                return True
+            else:
+                return False
+        elif str_type == StrType.DELETE:
+            if len(check_line.replace('delete', '').strip().split(' ')) != 1:
+                return True
+            else:
+                return False
+
+
+handler = Handler()
+handler.parse()
