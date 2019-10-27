@@ -22,11 +22,11 @@ class Node:
         self.left_child = left_ch
 
     def __bool__(self):
-        return bool(self.key and self.value)
+        return bool((self.key is not None) and (self.value is not None))
 
 
 class EmptyTree(Exception):
-    def __init__(self, message):
+    def __init__(self, message=None):
         super().__init__(message)
 
 
@@ -40,7 +40,7 @@ class BST:
         node = Node(key, value)
         parent = None
         temp = self.root
-        while temp and temp.key:
+        while temp:
             parent = temp
             if key < temp.key:
                 temp = temp.left_child
@@ -62,19 +62,23 @@ class BST:
 
     def _search_node(self, key):
         temp = self.root
-        while temp.key:
+        while temp:
             if temp.key == key:
                 return temp
             else:
                 if temp.key > key:
+                    if not temp.left_child:
+                        break
                     temp = temp.left_child
                 else:
+                    if not temp.right_child:
+                        break
                     temp = temp.right_child
         return temp
 
     def search(self, key):
         node = self._search_node(key)
-        if node.key == key:
+        if node and node.key == key:
             return True
         else:
             return False
@@ -90,11 +94,10 @@ class BST:
         :return:True if success , else False
         """
         node = self._search_node(key)
-        if node is not None:
+        if node:
             node.value = value
-            return True
         else:
-            return False
+            raise KeyError
 
     def _min_node(self, root=None):
         temp = self.root if not root else root
@@ -256,13 +259,13 @@ class SplayTree(BST):
                 self._zag_zig(node)
 
     def add(self, key, value):
-        self.size += 1
         node = self._add_note(key, value)
+        self.size += 1
         self._splay(node)
 
     def search(self, key):
         node = self._search_node(key)
-        if node.key == key:
+        if node and node.key == key:
             self._splay(node)
             return node.value
         else:
@@ -271,15 +274,10 @@ class SplayTree(BST):
 
     def set(self, key, value):
         node = self._set_node(key, value)
-        if node is not None:
+        if node:
             self._splay(node)
         else:
             raise KeyError
-
-    def min(self):
-        node = self._min_node()
-        self._splay(node)
-        return node.key, node.value
 
     def delete(self, key):
         node = self._search_node(key)
@@ -287,14 +285,16 @@ class SplayTree(BST):
             self.size -= 1
             self._splay(node)
             if self.root.left_child is not None and self.root.right_child is not None:
-                right_sub_tree = self.root.right_child
+                L_tree = SplayTree()
                 self.root.left_child.parent = None
-                temp = self.root.left_child
-                while temp and temp.right_child:
-                    temp = temp.right_child
-                self._splay(temp)
-                right_sub_tree.parent = self.root
-                self.root.right_child = right_sub_tree
+                L_tree.root = self.root.left_child
+                R_tree = SplayTree()
+                R_tree.root = self.root.right_child
+                L_tree.max()
+                self.root = L_tree.root
+                self.root.right_child = R_tree.root
+                self.root.right_child.parent = self.root
+
             elif self.root.left_child is not None:
                 self.root.left_child.parent = None
                 self.root = self.root.left_child
@@ -306,19 +306,30 @@ class SplayTree(BST):
         else:
             raise KeyError
 
+    def min(self):
+        node = self._min_node()
+        if node:
+            self._splay(node)
+            return node.key, node.value
+        else:
+            raise EmptyTree
+
     def max(self):
         node = self._max_node()
-        self._splay(node)
-        return node.key, node.value
+        if node:
+            self._splay(node)
+            return node.key, node.value
+        else:
+            raise EmptyTree
+
+    def p_node(self, n: Node):
+        if n == self.root:
+            return f"[{n.key} {n.value}]"
+        else:
+            return f"[{n.key} {n.value} {n.parent.key}]" if n else '_'
 
     def string_representation(self):
         string = ''
-
-        def p_node(n: Node):
-            if n == self.root:
-                return f"[{n.key} {n.value}]"
-            else:
-                return f"[{n.key} {n.value} {n.parent.key}]" if n is not None else '_'
 
         num_of_printed = 0
         num_of_printed_nodes = 0
@@ -327,7 +338,7 @@ class SplayTree(BST):
         while num_of_printed_nodes != self.size:
             num_of_printed += 1
             node = q.popleft()
-            string += (p_node(node) + ('\n' if ((num_of_printed + 1) & num_of_printed == 0) else ' '))
+            string += (self.p_node(node) + ('\n' if ((num_of_printed + 1) & num_of_printed == 0) else ' '))
             if node:
                 num_of_printed_nodes += 1
                 q.extend((node.left_child, node.right_child))
@@ -366,7 +377,9 @@ class Handler:
                 if self.have_error(line, StrType.SEARCH):
                     final_line += 'error\n'
                 else:
-                    final_line += '1\n' if S_tree.search(int(line[len('search'):].strip())) else '0\n'
+                    key = int(line[len('search'):].strip())
+                    value = S_tree.search(key)
+                    final_line += f"1 {value}\n" if value else '0\n'
 
             elif 'add' in line:
                 if self.have_error(line, StrType.ADD):
@@ -456,5 +469,6 @@ class Handler:
                 return False
 
 
-handler = Handler()
-handler.parse()
+if __name__ == "__main__":
+    handler = Handler()
+    handler.parse()
