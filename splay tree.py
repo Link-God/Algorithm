@@ -1,5 +1,4 @@
 from enum import Enum
-from collections import deque
 from sys import stdin
 
 
@@ -31,8 +30,6 @@ class EmptyTree(Exception):
 
 
 class BST:
-    root: Node
-
     def __init__(self):
         self.root = Node(None, None)
 
@@ -286,10 +283,12 @@ class SplayTree(BST):
             self._splay(node)
             if self.root.left_child is not None and self.root.right_child is not None:
                 L_tree = SplayTree()
+                R_tree = SplayTree()
+
                 self.root.left_child.parent = None
                 L_tree.root = self.root.left_child
-                R_tree = SplayTree()
                 R_tree.root = self.root.right_child
+
                 L_tree.max()
                 self.root = L_tree.root
                 self.root.right_child = R_tree.root
@@ -324,31 +323,42 @@ class SplayTree(BST):
 
     def p_node(self, n: Node):
         if n == self.root:
-            return f"[{n.key} {n.value}]"
+            return '[' + str(n.key) + ' ' + str(n.value) + ']'
         else:
-            return f"[{n.key} {n.value} {n.parent.key}]" if n else '_'
+            return '[' + str(n.key) + ' ' + str(n.value) + ' ' + str(n.parent.key) + ']'
+
+    def find_high_and_indexes(self, node, h, index, dict_of_indexes: dict):
+        if node:
+            new_h = h + 1
+            left_index = 2 * index + 1
+            right_index = 2 * index + 2
+            dict_of_indexes[index] = node
+
+            return max(self.find_high_and_indexes(node.left_child, new_h, left_index, dict_of_indexes),
+                       self.find_high_and_indexes(node.right_child, new_h, right_index, dict_of_indexes))
+        else:
+            return h
 
     def string_representation(self):
-        string = ''
+        dict_of_indexes = {}
+        high = self.find_high_and_indexes(self.root, 0, 0, dict_of_indexes)
+        need_to_print = (1 << high) - 1
 
-        num_of_printed = 0
-        num_of_printed_nodes = 0
-        q = deque()
-        q.append(self.root)
-        while num_of_printed_nodes != self.size:
-            num_of_printed += 1
-            node = q.popleft()
-            string += (self.p_node(node) + ('\n' if ((num_of_printed + 1) & num_of_printed == 0) else ' '))
-            if node:
-                num_of_printed_nodes += 1
-                q.extend((node.left_child, node.right_child))
+        if need_to_print == 0:
+            return '_'
+
+        list_of_nodes = [' _'] * need_to_print
+
+        for index, node in dict_of_indexes.items():
+            if ((index + 1) & index) == 0:
+                list_of_nodes[index] = ('\n' if index != 0 else '') + self.p_node(node)
             else:
-                q.extend((None, None))
+                list_of_nodes[index] = ' ' + self.p_node(node)
+        for i in range(1, high):
+            index = 2 ** i
+            list_of_nodes[index - 1] = '\n' + list_of_nodes[index - 1][1:]
 
-        remaining_empties = ((1 << (len(bin(num_of_printed)[2:]))) - num_of_printed) - 1
-        if remaining_empties:
-            string += ' '.join('_' for _ in range(remaining_empties))
-
+        string = ''.join(list_of_nodes)
         return string.strip()
 
 
@@ -362,7 +372,7 @@ class Handler:
         for line in self.handler_object:
             if line == '\n':
                 continue
-            if 'set' in line:
+            if line.find('set') == 0:
                 if self.have_error(line, StrType.SET):
                     final_line += 'error\n'
                 else:
@@ -373,15 +383,15 @@ class Handler:
                     except KeyError:
                         final_line += 'error\n'
 
-            elif 'search' in line:
+            elif line.find('search') == 0:
                 if self.have_error(line, StrType.SEARCH):
                     final_line += 'error\n'
                 else:
                     key = int(line[len('search'):].strip())
                     value = S_tree.search(key)
-                    final_line += f"1 {value}\n" if value else '0\n'
+                    final_line += '1 ' + str(value) + '\n' if value else '0\n'
 
-            elif 'add' in line:
+            elif line.find('add') == 0:
                 if self.have_error(line, StrType.ADD):
                     final_line += 'error\n'
                 else:
@@ -392,22 +402,22 @@ class Handler:
                     except KeyError:
                         final_line += 'error\n'
 
-            elif 'print' in line:
+            elif line.find('print') == 0:
                 if self.have_error(line, StrType.PRINT):
                     final_line += 'error\n'
                 else:
                     final_line += S_tree.string_representation() + '\n'
 
-            elif 'max' in line:
+            elif line.find('max') == 0:
                 if self.have_error(line, StrType.MAX):
                     final_line += 'error\n'
                 else:
                     try:
-                        final_line += "{} {}".format(*S_tree.max()) + '\n'
+                        final_line += '{} {}'.format(*S_tree.max()) + '\n'
                     except EmptyTree:
                         final_line += 'error\n'
 
-            elif 'min' in line:
+            elif line.find('min') == 0:
                 if self.have_error(line, StrType.MIN):
                     final_line += 'error\n'
                 else:
@@ -416,7 +426,7 @@ class Handler:
                     except EmptyTree:
                         final_line += 'error\n'
 
-            elif 'delete' in line:
+            elif line.find('delete') == 0:
                 if self.have_error(line, StrType.DELETE):
                     final_line += 'error\n'
                 else:
