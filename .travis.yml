@@ -1,5 +1,6 @@
 language: python
+# before_install: cd tests
 python:
   - "3.4"
 script:
-  - python ./tests test_splay_tree.py
+  - python test_splay_tree.py
