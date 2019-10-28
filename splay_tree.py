@@ -438,7 +438,7 @@ class Handler:
             else:
                 final_line += 'error\n'
 
-        print(final_line, end='')
+        return final_line
 
     @staticmethod
     def have_error(check_line: str, str_type: StrType):
@@ -481,4 +481,5 @@ class Handler:
 
 if __name__ == "__main__":
     handler = Handler()
-    handler.parse()
+    final_string = handler.parse()
+    print(final_string, end='\n')
