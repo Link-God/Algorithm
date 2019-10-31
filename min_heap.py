@@ -112,10 +112,11 @@ class MinHeap:
 
         self.array[index].parent_key = parent_index_parent_key
         self.array[parent_index].parent_key = index_key
-        if index == 2 * parent_index + 1 and index + 1 < len(self.array):
-            self.array[index + 1].parent_key = index_key
+        if index == 2 * parent_index + 1:
+            if index + 1 < len(self.array):
+                self.array[index + 1].parent_key = index_key
         else:
-            self.array[index - 1].parent_ley = index_key
+            self.array[index - 1].parent_key = index_key
 
         parent_index_key = self.array[parent_index].key
         if 2 * index + 1 < len(self.array):
