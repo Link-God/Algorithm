@@ -95,6 +95,8 @@ class MinHeap:
             right_i = 2 * index + 2
             min_el = min(self.array[left_i], self.array[right_i]) if right_i < len(self.array) else self.array[left_i]
             min_el_index = min_el.index
+            if self.array[index] < self.array[min_el_index]:
+                break
             self._swap_in_array(min_el.index, index)
             min_el.swap_index(self.array[min_el_index])
             index = min_el_index
@@ -195,7 +197,8 @@ class MinHeap:
 
         self.dict.pop(key)
         node.set(self.array.pop())
-        if node < self.array[(node.index - 1) // 2]:
+        parent_index = (node.index - 1) // 2
+        if parent_index >= 0 and node < self.array[parent_index]:
             self._sift_up(node.index)
         else:
             self._sift_down(node.index)
