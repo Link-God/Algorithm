@@ -89,8 +89,10 @@ class MinHeap:
             left_i = 2 * index + 1
             right_i = 2 * index + 2
             min_el = min(self.array[left_i], self.array[right_i]) if right_i < len(self.array) else self.array[left_i]
+            min_el_index = min_el.index
             self._swap_in_array(min_el.index, index)
-            min_el.swap_index(index)
+            min_el.swap_index(self.array[min_el_index])
+            index = min_el_index
 
     def _sift_up(self, index):
         parent_index = (index - 1) // 2
@@ -101,24 +103,27 @@ class MinHeap:
 
     def _swap_in_array(self, index, parent_index):
         index_key = self.array[index].key
-        parent_index_key = self.array[parent_index].key
+        parent_index_parent_key = self.array[parent_index].parent_key
 
-        self.array[index].parent_key = parent_index_key
+        self.array[index].parent_key = parent_index_parent_key
         self.array[parent_index].parent_key = index_key
         if index == 2 * parent_index + 1 and index + 1 < len(self.array):
             self.array[index + 1].parent_key = index_key
         else:
             self.array[index - 1].parent_ley = index_key
 
-        # TODO дети node_index родитель не поменсля !!
+        parent_index_key = self.array[parent_index].key
+        if 2 * index + 1 < len(self.array):
+            self.array[2 * index + 1].parent_key = parent_index_key
+        if 2 * index + 2 < len(self.array):
+            self.array[2 * index + 2].parent_key = parent_index_key
+
         self.array[index], self.array[parent_index] = self.array[parent_index], self.array[index]
 
     def add(self, key, value):
         node = Node(key, value, len(self.array))
         parent_index = (node.index - 1) // 2
-        if len(self.array) == 0:
-            self.max_element = node
-        else:
+        if len(self.array) != 0:
             self.max_element = max(self.max_element, node)
             node.parent_key = self.array[parent_index].key
 
@@ -142,14 +147,15 @@ class MinHeap:
             raise KeyError
 
     def extend(self):
-        pass
+        self.delete(self.array[0].key)
 
     def min(self):
         node = self.array[0]
         return node.key, 0, node.value
 
     def max(self):
-        node = self.max_element
+        # num_of_nodes_in_last_level = len(self.array) - (2 ** int(log2(len(self.array))) - 1)
+        node = max(self.array)
         return node.key, node.index, node.value
 
     def string_representation(self):
@@ -293,6 +299,9 @@ if __name__ == "__main__":
     h.add(7, 4)
     h.add(8, 4)
     h.set(2, 10)
+    print(h.max())
+    h.delete(6)
+
     # h.delete(2)
     print(h.string_representation())
     # handler = Handler()
