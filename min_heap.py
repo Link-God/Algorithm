@@ -78,6 +78,11 @@ class Node:
             return False
 
 
+class EmptyHeap(Exception):
+    def __init__(self, message=None):
+        super().__init__(message)
+
+
 class MinHeap:
     def __init__(self):
         self.array = []
@@ -121,14 +126,15 @@ class MinHeap:
         self.array[index], self.array[parent_index] = self.array[parent_index], self.array[index]
 
     def add(self, key, value):
+        if self.dict.get(key):
+            raise KeyError
         node = Node(key, value, len(self.array))
         parent_index = (node.index - 1) // 2
+
         if len(self.array) != 0:
             self.max_element = max(self.max_element, node)
             node.parent_key = self.array[parent_index].key
 
-        if self.dict.get(key):
-            raise KeyError
         self.dict[key] = node
         self.array.append(node)
 
@@ -146,14 +152,22 @@ class MinHeap:
         else:
             raise KeyError
 
-    def extend(self):
+    def extract(self):
+        if len(self.array) == 0:
+            raise EmptyHeap
+        key, value = self.array[0].key, self.array[0].value
         self.delete(self.array[0].key)
+        return key, value
 
     def min(self):
+        if len(self.array) == 0:
+            raise EmptyHeap
         node = self.array[0]
         return node.key, 0, node.value
 
     def max(self):
+        if len(self.array) == 0:
+            raise EmptyHeap
         # num_of_nodes_in_last_level = len(self.array) - (2 ** int(log2(len(self.array))) - 1)
         node = max(self.array)
         return node.key, node.index, node.value
@@ -169,9 +183,9 @@ class MinHeap:
     def search(self, key):
         node = self._search_node(key)
         if node:
-            return node.value
+            return node.index, node.value
         else:
-            return None
+            return None, None
 
     def delete(self, key):
         node = self._search_node(key)
@@ -196,48 +210,77 @@ class Handler:
         for line in self.handler_object:
             if line == '\n':
                 continue
+
             if line.find('set') == 0:
                 if self.have_error(line, StrType.SET):
                     final_line += 'error\n'
                 else:
-                    pass
+                    try:
+                        temp_list = line.replace('set', '').strip().split(' ')
+                        key, value = int(temp_list[0]), str(temp_list[1])
+                        heap.set(key, value)
+                    except KeyError:
+                        final_line += 'error\n'
 
             elif line.find('search') == 0:
                 if self.have_error(line, StrType.SEARCH):
                     final_line += 'error\n'
                 else:
-                    pass
+                    key = int(line.replace('search', '').strip())
+                    index, value = heap.search(key)
+                    final_line += '1 {} {}'.format(index, value) + '\n' if value else '0\n'
 
             elif line.find('add') == 0:
                 if self.have_error(line, StrType.ADD):
                     final_line += 'error\n'
                 else:
-                    pass
+                    try:
+                        temp_list = line.replace('add', '').strip().split(' ')
+                        key, value = int(temp_list[0]), str(temp_list[1])
+                        heap.add(key, value)
+                    except KeyError:
+                        final_line += 'error\n'
 
             elif line.find('print') == 0:
                 if self.have_error(line, StrType.PRINT):
                     final_line += 'error\n'
                 else:
-                    pass
+                    final_line += heap.string_representation() + '\n'
 
             elif line.find('max') == 0:
                 if self.have_error(line, StrType.MAX):
                     final_line += 'error\n'
                 else:
-                    pass
+                    try:
+                        final_line += '{} {} {}'.format(*heap.max()) + '\n'
+                    except EmptyHeap:
+                        final_line += 'error\n'
 
             elif line.find('min') == 0:
                 if self.have_error(line, StrType.MIN):
                     final_line += 'error\n'
                 else:
-                    pass
+                    try:
+                        final_line += '{} {} {}'.format(*heap.min()) + '\n'
+                    except EmptyHeap:
+                        final_line += 'error\n'
 
             elif line.find('delete') == 0:
                 if self.have_error(line, StrType.DELETE):
                     final_line += 'error\n'
                 else:
-                    pass
-
+                    try:
+                        heap.delete(int(line.replace('delete', '').strip()))
+                    except KeyError:
+                        final_line += 'error\n'
+            elif line.find('extract') == 0:
+                if self.have_error(line, StrType.EXTRACT):
+                    final_line += 'error\n'
+                else:
+                    try:
+                        final_line += '{} {}'.format(*heap.extract()) + '\n'
+                    except EmptyHeap:
+                        final_line += 'error\n'
             else:
                 final_line += 'error\n'
 
@@ -288,32 +331,6 @@ class Handler:
 
 
 if __name__ == "__main__":
-    h = MinHeap()
-    # h.add(1, 2)
-    # h.add(2, 1)
-    # h.add(3, 4)
-    # h.add(0, 4)
-    #
-    # h.add(5, 4)
-    # h.add(6, 4)
-    # h.add(7, 4)
-    # h.add(8, 4)
-    # h.set(2, 10)
-    # print(h.max())
-    # h.delete(6)
-    h.add(1,1)
-    h.add(2, 1)
-    h.add(100, 1)
-    h.add(3, 1)
-    h.add(4, 1)
-    h.add(190, 1)
-    h.add(120,1)
-    h.add(5, 1)
-    h.delete(190)
-
-
-    # h.delete(2)
-    print(h.string_representation())
-    # handler = Handler()
-    # final_string = handler.parse()
-    # print(final_string, end='\n')
+    handler = Handler()
+    final_string = handler.parse()
+    print(final_string, end='\n')
