@@ -96,7 +96,7 @@ class MinHeap:
 
     def _sift_up(self, index):
         parent_index = (index - 1) // 2
-        while self.array[index] > self.array[parent_index]:
+        while self.array[index] < self.array[parent_index]:
             self._swap_in_array(index, parent_index)
             self.array[index].swap_index(self.array[parent_index])
             index = parent_index
@@ -180,7 +180,7 @@ class MinHeap:
 
         self.dict.pop(key)
         node.set(self.array.pop())
-        if node.key < self.array[(node.index - 1) // 2]:
+        if node < self.array[(node.index - 1) // 2]:
             self._sift_up(node.index)
         else:
             self._sift_down(node.index)
@@ -289,18 +289,28 @@ class Handler:
 
 if __name__ == "__main__":
     h = MinHeap()
-    h.add(1, 2)
+    # h.add(1, 2)
+    # h.add(2, 1)
+    # h.add(3, 4)
+    # h.add(0, 4)
+    #
+    # h.add(5, 4)
+    # h.add(6, 4)
+    # h.add(7, 4)
+    # h.add(8, 4)
+    # h.set(2, 10)
+    # print(h.max())
+    # h.delete(6)
+    h.add(1,1)
     h.add(2, 1)
-    h.add(3, 4)
-    h.add(0, 4)
+    h.add(100, 1)
+    h.add(3, 1)
+    h.add(4, 1)
+    h.add(190, 1)
+    h.add(120,1)
+    h.add(5, 1)
+    h.delete(190)
 
-    h.add(5, 4)
-    h.add(6, 4)
-    h.add(7, 4)
-    h.add(8, 4)
-    h.set(2, 10)
-    print(h.max())
-    h.delete(6)
 
     # h.delete(2)
     print(h.string_representation())
