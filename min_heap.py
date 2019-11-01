@@ -176,6 +176,8 @@ class MinHeap:
         return node.key, node.index, node.value
 
     def string_representation(self):
+        if len(self.array) == 0:
+            return '_'
         high = int(log2(len(self.array)))
         list_to_print = self.array + [' _'] * (((1 << (high + 1)) - 1) - len(self.array))
         return ''.join(str(x) for x in list_to_print)
@@ -197,6 +199,8 @@ class MinHeap:
 
         self.dict.pop(key)
         node.set(self.array.pop())
+        if node.key != key:
+            self.dict[node.key] = node
         parent_index = (node.index - 1) // 2
         if parent_index >= 0 and node < self.array[parent_index]:
             self._sift_up(node.index)
