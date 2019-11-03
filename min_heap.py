@@ -87,33 +87,65 @@ class MinHeap:
     def __init__(self):
         self.array = []
         self.dict = {}
-        self.max_element = None
+
+    @staticmethod
+    def _get_parent_index(index):
+        return (index - 1) // 2
+
+    def _swap_nodes_in_array(self, index, parent_index):
+        self._swap_parent_keys(index, parent_index)
+        self.array[index], self.array[parent_index] = self.array[parent_index], self.array[index]
+
+    def _swap_in_array(self, index, parent_index):
+        self._swap_nodes_in_array(index, parent_index)
+        self.array[index].swap_index(self.array[parent_index])
 
     def _sift_down(self, index):
+        if 2 * index + 1 < len(self.array):
+            node = self.array[index]
+            left_node = self.array[2 * index + 1]
+            if node < left_node:
+                if 2 * index + 2 < len(self.array):
+                    right_node = self.array[2 * index + 2]
+                    if node < right_node:
+                        self._set_parent_key_to_child(index, self.array[index].key)
+                        return
+                else:
+                    self._set_parent_key_to_child(index, self.array[index].key)
+                    return
+
         while 2 * index + 1 < len(self.array):
             left_i = 2 * index + 1
             right_i = 2 * index + 2
+
             min_el = min(self.array[left_i], self.array[right_i]) if right_i < len(self.array) else self.array[left_i]
             min_el_index = min_el.index
             if self.array[index] < self.array[min_el_index]:
                 break
-            self._swap_in_array(min_el.index, index)
-            min_el.swap_index(self.array[min_el_index])
+            self._swap_in_array(min_el_index, index)
+
             index = min_el_index
 
     def _sift_up(self, index):
-        parent_index = (index - 1) // 2
-        while self.array[index] < self.array[parent_index]:
-            self._swap_in_array(index, parent_index)
-            self.array[index].swap_index(self.array[parent_index])
-            index = parent_index
+        while self.array[index] < self.array[self._get_parent_index(index)]:
+            self._swap_in_array(index, self._get_parent_index(index))
+            index = self._get_parent_index(index)
+            if index == 0:
+                break
 
-    def _swap_in_array(self, index, parent_index):
+    def _set_parent_key_to_child(self, index, parent_key):
+        if 2 * index + 1 < len(self.array):
+            self.array[2 * index + 1].parent_key = parent_key
+        if 2 * index + 2 < len(self.array):
+            self.array[2 * index + 2].parent_key = parent_key
+
+    def _swap_parent_keys(self, index, parent_index):
         index_key = self.array[index].key
         parent_index_parent_key = self.array[parent_index].parent_key
 
         self.array[index].parent_key = parent_index_parent_key
         self.array[parent_index].parent_key = index_key
+
         if index == 2 * parent_index + 1:
             if index + 1 < len(self.array):
                 self.array[index + 1].parent_key = index_key
@@ -121,32 +153,23 @@ class MinHeap:
             self.array[index - 1].parent_key = index_key
 
         parent_index_key = self.array[parent_index].key
-        if 2 * index + 1 < len(self.array):
-            self.array[2 * index + 1].parent_key = parent_index_key
-        if 2 * index + 2 < len(self.array):
-            self.array[2 * index + 2].parent_key = parent_index_key
-
-        self.array[index], self.array[parent_index] = self.array[parent_index], self.array[index]
+        self._set_parent_key_to_child(index, parent_index_key)
 
     def add(self, key, value):
         if self.dict.get(key):
             raise KeyError
+
         node = Node(key, value, len(self.array))
-        parent_index = (node.index - 1) // 2
+        parent_index = self._get_parent_index(node.index)
 
         if len(self.array) != 0:
-            self.max_element = max(self.max_element, node)
             node.parent_key = self.array[parent_index].key
 
         self.dict[key] = node
         self.array.append(node)
 
-        while node.index > 0 and self.array[parent_index] > self.array[node.index]:
-            parent = self.array[parent_index]
-            self._swap_in_array(node.index, parent_index)
-            node.swap_index(parent)
-
-            parent_index = (node.index - 1) // 2
+        if node.index > 0 and self.array[node.index] < self.array[parent_index]:
+            self._sift_up(node.index)
 
     def set(self, key, value):
         node = self.dict.get(key)
@@ -171,7 +194,6 @@ class MinHeap:
     def max(self):
         if len(self.array) == 0:
             raise EmptyHeap
-        # num_of_nodes_in_last_level = len(self.array) - (2 ** int(log2(len(self.array))) - 1)
         node = max(self.array)
         return node.key, node.index, node.value
 
@@ -201,7 +223,8 @@ class MinHeap:
         node.set(self.array.pop())
         if node.key != key:
             self.dict[node.key] = node
-        parent_index = (node.index - 1) // 2
+
+        parent_index = self._get_parent_index(node.index)
         if parent_index >= 0 and node < self.array[parent_index]:
             self._sift_up(node.index)
         else:
