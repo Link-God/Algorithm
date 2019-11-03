@@ -15,11 +15,10 @@ class StrType(Enum):
 
 
 class Node:
-    def __init__(self, key, value, index, parent_key=None):
+    def __init__(self, key, value, index):
         self.key = key
         self.value = value
         self.index = index
-        self.parent_key = parent_key
 
     def set(self, other):
         self.key = other.key
@@ -32,11 +31,7 @@ class Node:
         return "key:{}, value:{}, index:{}".format(self.key, self.value, self.index)
 
     def __str__(self):
-        if self.index == 0:
-            return "[{} {}]".format(self.key, self.value)
-        else:
-            return ('\n' if log2(self.index + 1).is_integer() else ' ') + "[{} {} {}]".format(self.key, self.value,
-                                                                                              self.parent_key)
+        return "{} {}".format(self.key, self.value)
 
     def __eq__(self, other):
         # ==
@@ -92,31 +87,22 @@ class MinHeap:
     def _get_parent_index(index):
         return (index - 1) // 2
 
-    def _swap_nodes_in_array(self, index, parent_index):
-        self._swap_parent_keys(index, parent_index)
-        self.array[index], self.array[parent_index] = self.array[parent_index], self.array[index]
+    @staticmethod
+    def _get_left_ch_index(index):
+        return 2 * index + 1
+
+    @staticmethod
+    def _get_right_ch_index(index):
+        return 2 * index + 2
 
     def _swap_in_array(self, index, parent_index):
-        self._swap_nodes_in_array(index, parent_index)
+        self.array[index], self.array[parent_index] = self.array[parent_index], self.array[index]
         self.array[index].swap_index(self.array[parent_index])
 
     def _sift_down(self, index):
-        if 2 * index + 1 < len(self.array):
-            node = self.array[index]
-            left_node = self.array[2 * index + 1]
-            if node < left_node:
-                if 2 * index + 2 < len(self.array):
-                    right_node = self.array[2 * index + 2]
-                    if node < right_node:
-                        self._set_parent_key_to_child(index, self.array[index].key)
-                        return
-                else:
-                    self._set_parent_key_to_child(index, self.array[index].key)
-                    return
-
         while 2 * index + 1 < len(self.array):
-            left_i = 2 * index + 1
-            right_i = 2 * index + 2
+            left_i = self._get_left_ch_index(index)
+            right_i = self._get_right_ch_index(index)
 
             min_el = min(self.array[left_i], self.array[right_i]) if right_i < len(self.array) else self.array[left_i]
             min_el_index = min_el.index
@@ -133,37 +119,12 @@ class MinHeap:
             if index == 0:
                 break
 
-    def _set_parent_key_to_child(self, index, parent_key):
-        if 2 * index + 1 < len(self.array):
-            self.array[2 * index + 1].parent_key = parent_key
-        if 2 * index + 2 < len(self.array):
-            self.array[2 * index + 2].parent_key = parent_key
-
-    def _swap_parent_keys(self, index, parent_index):
-        index_key = self.array[index].key
-        parent_index_parent_key = self.array[parent_index].parent_key
-
-        self.array[index].parent_key = parent_index_parent_key
-        self.array[parent_index].parent_key = index_key
-
-        if index == 2 * parent_index + 1:
-            if index + 1 < len(self.array):
-                self.array[index + 1].parent_key = index_key
-        else:
-            self.array[index - 1].parent_key = index_key
-
-        parent_index_key = self.array[parent_index].key
-        self._set_parent_key_to_child(index, parent_index_key)
-
     def add(self, key, value):
         if self.dict.get(key):
             raise KeyError
 
         node = Node(key, value, len(self.array))
         parent_index = self._get_parent_index(node.index)
-
-        if len(self.array) != 0:
-            node.parent_key = self.array[parent_index].key
 
         self.dict[key] = node
         self.array.append(node)
@@ -197,12 +158,17 @@ class MinHeap:
         node = max(self.array)
         return node.key, node.index, node.value
 
+    def p_node(self, node):
+        return '[{} {}]'.format(str(node), self.array[self._get_parent_index(node.index)].key)
+
     def string_representation(self):
         if len(self.array) == 0:
             return '_'
         high = int(log2(len(self.array)))
-        list_to_print = self.array + [' _'] * (((1 << (high + 1)) - 1) - len(self.array))
-        return ''.join(str(x) for x in list_to_print)
+        list_to_print = ['[{} {}]'.format(self.array[0].key, self.array[0].value)]
+        list_to_print += [('\n' if log2(x.index + 1).is_integer() else ' ') + self.p_node(x) for x in self.array[1:]]
+        list_to_print += [' _'] * (((1 << (high + 1)) - 1) - len(self.array))
+        return ''.join(list_to_print)
 
     def _search_node(self, key):
         return self.dict.get(key)

@@ -23,14 +23,6 @@ def eratosthenes(n):
     return sieve
 
 
-def get_prime_by_index(index):
-    return list(filter(lambda x: x != 0, eratosthenes(int(1.5 * index * log(index)) + 1)))[index - 1]
-
-
-def family_of_hash_functions(x, index, m):
-    return (((index + 1) * x + get_prime_by_index(index + 1)) % M) % m
-
-
 class BitArray:
     def __init__(self, size):
         self.bit_array = 0
@@ -53,15 +45,22 @@ class BlumFilter:
         self.size_of_array = round(-n * log2(P) / log(2))
         self.quantity_of_hash_func = round(-log2(P))
         self.bit_array = BitArray(self.size_of_array)
-        self.hash_func = family_of_hash_functions
+        self.list_of_primes = list(filter(lambda x: x != 0, eratosthenes(
+            int(1.5 * self.quantity_of_hash_func * log(self.quantity_of_hash_func)) + 1)))
+
+    def hash_function(self, x, index, m):
+        return (((index + 1) * x + self.get_prime_by_index(index + 1)) % M) % m
+
+    def get_prime_by_index(self, index):
+        return self.list_of_primes[index - 1]
 
     def add(self, key):
         for i in range(self.quantity_of_hash_func):
-            self.bit_array.add(self.hash_func(key, i, self.size_of_array))
+            self.bit_array.add(self.hash_function(key, i, self.size_of_array))
 
     def search(self, key):
         for i in range(self.quantity_of_hash_func):
-            if not self.bit_array.find(self.hash_func(key, i, self.size_of_array)):
+            if not self.bit_array.find(self.hash_function(key, i, self.size_of_array)):
                 return False
         return True
 
