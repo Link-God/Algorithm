@@ -122,15 +122,14 @@ class MinHeap:
     def add(self, key, value):
         if self.dict.get(key):
             raise KeyError
-
-        node = Node(key, value, len(self.array))
-        parent_index = self._get_parent_index(node.index)
+        index = len(self.array)
+        node = Node(key, value, index)
+        parent_index = self._get_parent_index(index)
 
         self.dict[key] = node
         self.array.append(node)
-
-        if node.index > 0 and self.array[node.index] < self.array[parent_index]:
-            self._sift_up(node.index)
+        if index > 0 and node < self.array[parent_index]:
+            self._sift_up(index)
 
     def set(self, key, value):
         node = self.dict.get(key)

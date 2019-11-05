@@ -40,7 +40,7 @@ class BitArray:
         return bin(self.bit_array)[:1:-1] + '0' * (self.size - len(bin(self.bit_array)[2:]))
 
 
-class BlumFilter:
+class BloomFilter:
     def __init__(self, n, P):
         self.size_of_array = round(-n * log2(P) / log(2))
         self.quantity_of_hash_func = round(-log2(P))
@@ -103,7 +103,7 @@ if __name__ == "__main__":
                     final_line += 'error\n'
                 else:
                     try:
-                        B_filter = BlumFilter(*list(map(float, line[len('set'):].split())))
+                        B_filter = BloomFilter(*list(map(float, line[len('set'):].split())))
                         if B_filter.size_of_array <= 0 or B_filter.quantity_of_hash_func <= 0:
                             B_filter = None
                             raise ValueError
