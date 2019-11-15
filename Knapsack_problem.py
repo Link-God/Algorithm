@@ -1,4 +1,5 @@
 from sys import stdin
+from collections import OrderedDict
 
 
 def create_table(capacity: int, weight: list, price: list):
@@ -14,7 +15,7 @@ def create_table(capacity: int, weight: list, price: list):
     return matrix
 
 
-def get_answer(capacity: int, weight_and_price: dict):
+def get_answer(capacity: int, weight_and_price):
     weight = list(weight_and_price.keys())
     price = list(weight_and_price.values())
     matrix = create_table(capacity, weight, price)
@@ -36,7 +37,7 @@ def get_answer(capacity: int, weight_and_price: dict):
 
 def handler(obj=stdin):
     capacity = 0
-    weight_and_price = dict()
+    weight_and_price = OrderedDict()
     for line in obj:
         if line == '\n':
             continue
