@@ -6,3 +6,4 @@ python:
 script:
   - python tests/test_splay_tree.py
   - python tests/test_min_heap.py
+  - python tests/test_backpack.py
