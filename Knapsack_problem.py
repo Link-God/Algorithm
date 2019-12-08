@@ -20,7 +20,7 @@ def get_answer(capacity: int, weight_and_price: list):
     weight = [tup[0] for tup in weight_and_price]
     price = [tup[1] for tup in weight_and_price]
     # находим НОД для эффективности по памяти
-    nod = reduce(gcd, [capacity, *weight])
+    nod = reduce(gcd, [capacity] + weight)
     capacity = capacity // nod
     weight[:] = map(lambda x: x // nod, weight)
     matrix = create_table(capacity, weight, price)
