@@ -1,5 +1,6 @@
 from sys import stdin
-from collections import OrderedDict
+from math import gcd
+from functools import reduce
 
 
 def create_table(capacity: int, weight: list, price: list):
@@ -15,9 +16,13 @@ def create_table(capacity: int, weight: list, price: list):
     return matrix
 
 
-def get_answer(capacity: int, weight_and_price):
-    weight = list(weight_and_price.keys())
-    price = list(weight_and_price.values())
+def get_answer(capacity: int, weight_and_price: list):
+    weight = [tup[0] for tup in weight_and_price]
+    price = [tup[1] for tup in weight_and_price]
+    # находим НОД для эффективности по памяти
+    nod = reduce(gcd, [capacity, *weight])
+    capacity = capacity // nod
+    weight[:] = map(lambda x: x // nod, weight)
     matrix = create_table(capacity, weight, price)
     answer = list()
 
@@ -37,7 +42,7 @@ def get_answer(capacity: int, weight_and_price):
 
 def handler(obj=stdin):
     capacity = 0
-    weight_and_price = OrderedDict()
+    weight_and_price = list()
     for line in obj:
         if line == '\n':
             continue
@@ -46,14 +51,14 @@ def handler(obj=stdin):
             capacity = list_of_numbers[0]
         else:
             weight, price = list_of_numbers
-            weight_and_price[weight] = price
+            weight_and_price.append((weight, price))
 
     return capacity, weight_and_price
 
 
 if __name__ == '__main__':
-    W, weight_and_price_dict = handler()
-    ans = get_answer(W, weight_and_price_dict)
-    print(sum(list(weight_and_price_dict.keys())[x - 1] for x in ans),
-          sum(list(weight_and_price_dict.values())[x - 1] for x in ans))
+    W, weight_and_price_list = handler()
+    ans = get_answer(W, weight_and_price_list)
+    print(sum([tup[0] for tup in weight_and_price_list][x - 1] for x in ans),
+          sum([tup[1] for tup in weight_and_price_list][x - 1] for x in ans))
     print(*ans, sep='\n')
