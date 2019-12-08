@@ -1,5 +1,5 @@
 from sys import stdin
-from math import gcd
+from fractions import gcd
 from functools import reduce
 
 
